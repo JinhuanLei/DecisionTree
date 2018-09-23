@@ -7,24 +7,68 @@ dataset=[]  # would be used as testing set ,its a list
 trainset=[]
 incset=[]   # add increment in each time
 properties={}
-
-def testTree():
-	pass
-def train(increment):
-	test=[['f', 'f', 'e', 't', 'n', 'f', 'c', 'b', 'n', 't', 'b', 's', 's', 'p', 'g', 'p', 'w', 'o', 'p', 'k', 'v', 'd', 'e'], 
+test=[['f', 'f', 'e', 't', 'n', 'f', 'c', 'b', 'n', 't', 'b', 's', 's', 'p', 'g', 'p', 'w', 'o', 'p', 'k', 'v', 'd', 'e'], 
 			['f', 'y', 'g', 'f', 'f', 'f', 'c', 'b', 'h', 'e', 'b', 'k', 'k', 'n', 'p', 'p', 'w', 'o', 'l', 'h', 'y', 'd', 'p'], 
 			['f', 'f', 'y', 'f', 'f', 'f', 'c', 'b', 'g', 'e', 'b', 'k', 'k', 'n', 'b', 'p', 'w','o', 'l', 'h', 'v', 'g', 'p'], 
 			['f', 'y', 'n', 't', 'n', 'f', 'c', 'b', 'w', 't', 'b', 's', 's', 'g', 'g', 'p', 'w', 'o', 'p', 'k', 'y', 'd', 'e'], 
 			['f', 'y','e', 't', 'n', 'f', 'c', 'b', 'u', 't', 'b', 's', 's', 'p', 'p', 'p', 'w', 'o','p', 'k', 'v', 'd', 'e']]
+def testTree(tree): 
+	global dataset,test
+	rid=tree.root  #root is the id of the property
+	root=tree.get_node(rid)
+	# print(root.fpointer)
+	paths=tree.paths_to_leaves()
+	# print(tree.depth)
+	# print(tree.nodes)
+	# print(root.is_leaf())
+	
+	countT=0
+	for item in dataset:
+		currentNode=root
+		# while currentNode.is_leaf()==False:
+		while True:
+			nodes=tree.children(currentNode.identifier)
+			val=item[int(currentNode.identifier)]     # test data
+			for node in nodes:
+				if node.tag==val:                     # campare with tree node
+					# pnode=node.bpointer
+					# pointer=node.fpointer      #its a node id 
+					# currentNode=tree.children(node.identifier)
+					currentNode=tree.get_node(node.identifier)
+					# currentNode=tree.get_node(node.fpointer)
+					# print("node")
+					# print(node)
+					# print("currentNode")
+					# print(currentNode)
+			if len(tree.children(currentNode.identifier))>1:
+				continue
+			currentNode=(tree.children(currentNode.identifier))[0]
+			if (currentNode.tag=="Edible")|(currentNode.tag=="Poison"):
+				# print(currentNode.tag+"  "+item[len(item)-1])
+				if currentNode.tag==StrConverter(item[len(item)-1]):
+					countT+=1
+				break
+	print(countT/len(dataset))	   
+
+def StrConverter(str):
+	if str=="e":
+		return "Edible"
+	else :
+		return "Poison"
+
+def train(increment):
 	# print(GetSubExamples(test,1))
-	incset=trainset[0:200]
+	incset=trainset[0:50]
 	attributes=[]
 	for i in range(22):
 		attributes.append(i)
 	# print(getImportant(incset,attributes))
-	trained=Tree()
+	trainedTree=Tree()
 	trainedTree=DecitionTreeLearning(incset,attributes,[])
 	trainedTree.show(line_type="ascii-em")
+	testTree(trainedTree)
+	# print(','.join([trainedTree[node].tag for node in trainedTree.expand_tree(mode=Tree.DEPTH)]))     #print the tree in line in DPS way
+
 
 def DecitionTreeLearning(examples,attributes,pexamples):
 	if len(examples)==0:
@@ -41,18 +85,24 @@ def DecitionTreeLearning(examples,attributes,pexamples):
 	else:
 		node=getImportant(examples,attributes)
 		tree = Tree()
-		tree.create_node(str(getPropertyName(node)), node)
+		tree.create_node(str(getPropertyName(node)), str(node))       #make the identifier be str
 		# tree.show()
 		subExamples=getSubExamples(examples,node)
 		attributes.remove(node)
 		for key, value in subExamples.items():
 			nodeIdentifier=getPropertyName(node)+"_"+key
-			tree.create_node(key,nodeIdentifier,node)
+			tree.create_node(key,nodeIdentifier,str(node))
 			subtree=DecitionTreeLearning(value,attributes,examples)
 			tree.paste(nodeIdentifier,subtree)
 		return tree
 
-
+def getIdByName(targetName):
+	index=0
+	for key in properties:
+		if key==targetName:     # is that ok to use == to compare str?
+			return index
+		index+=1
+	
 def getPropertyName(target):
 	index=0
 	for key in properties:
@@ -113,10 +163,6 @@ def getImportant(incSet,attributes):
 	for i in attributes:
 		importants.append(getGain(incSet,i))
 	maxVal=max(importants)
-	# print("importants")
-	# print(importants)
-	# print("importants.index(maxVal)")
-	# print(importants.index(maxVal))
 	return attributes[importants.index(maxVal)]
 
 def getGain(targetSet,attr):
