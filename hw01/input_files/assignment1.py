@@ -3,6 +3,7 @@ import os
 import random
 import math
 from treelib import Node, Tree
+import matplotlib.pyplot as plt
 dataset=[]  # would be used as testing set ,its a list
 trainset=[]
 incset=[]   # add increment in each time
@@ -39,6 +40,9 @@ def StrConverter(str):
 def train(trainSize,increment):
 	# print(GetSubExamples(test,1))
 	currentSize=increment
+	p1=[]   #x-axis  Training Set
+	p2=[]   #y-axis  Correct
+	
 	print("-----------")
 	print("Statistics")
 	print("-----------")
@@ -49,8 +53,12 @@ def train(trainSize,increment):
 			attributes.append(i)
 		trainedTree=Tree()
 		trainedTree=DecitionTreeLearning(incset,attributes,[])
-		print("Training set size: "+str(currentSize)+".  Success:  "+str(testTree(trainedTree))+" percent")
+		successPercent=testTree(trainedTree)
+		print("Training set size: "+str(currentSize)+".  Success:  "+str(successPercent)+" percent")
+		p1.append(currentSize)
+		p2.append(successPercent)
 		if(currentSize==trainSize):
+			# Draw(p1,p2)         #Call draw function to draw picture
 			print("-----------")
 			print("Final Decision Tree")
 			print("-----------")
@@ -61,6 +69,14 @@ def train(trainSize,increment):
 		else:
 			currentSize+=increment
 
+def Draw(p1,p2):
+	module_path = os.path.dirname(__file__)
+	plt.figure('Draw')
+	plt.plot(p1,p2)  
+	plt.draw()  
+	plt.pause(1)  
+	plt.savefig(module_path+"/Output01.png")
+	plt.close()   
 
 def DecitionTreeLearning(examples,attributes,pexamples):
 	if len(examples)==0:
