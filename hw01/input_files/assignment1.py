@@ -7,48 +7,28 @@ dataset=[]  # would be used as testing set ,its a list
 trainset=[]
 incset=[]   # add increment in each time
 properties={}
-test=[['f', 'f', 'e', 't', 'n', 'f', 'c', 'b', 'n', 't', 'b', 's', 's', 'p', 'g', 'p', 'w', 'o', 'p', 'k', 'v', 'd', 'e'], 
-			['f', 'y', 'g', 'f', 'f', 'f', 'c', 'b', 'h', 'e', 'b', 'k', 'k', 'n', 'p', 'p', 'w', 'o', 'l', 'h', 'y', 'd', 'p'], 
-			['f', 'f', 'y', 'f', 'f', 'f', 'c', 'b', 'g', 'e', 'b', 'k', 'k', 'n', 'b', 'p', 'w','o', 'l', 'h', 'v', 'g', 'p'], 
-			['f', 'y', 'n', 't', 'n', 'f', 'c', 'b', 'w', 't', 'b', 's', 's', 'g', 'g', 'p', 'w', 'o', 'p', 'k', 'y', 'd', 'e'], 
-			['f', 'y','e', 't', 'n', 'f', 'c', 'b', 'u', 't', 'b', 's', 's', 'p', 'p', 'p', 'w', 'o','p', 'k', 'v', 'd', 'e']]
 def testTree(tree): 
-	global dataset,test
+	global dataset
 	rid=tree.root  #root is the id of the property
 	root=tree.get_node(rid)
-	# print(root.fpointer)
-	paths=tree.paths_to_leaves()
-	# print(tree.depth)
-	# print(tree.nodes)
-	# print(root.is_leaf())
-	
 	countT=0
 	for item in dataset:
 		currentNode=root
-		# while currentNode.is_leaf()==False:
 		while True:
 			nodes=tree.children(currentNode.identifier)
 			val=item[int(currentNode.identifier)]     # test data
 			for node in nodes:
 				if node.tag==val:                     # campare with tree node
-					# pnode=node.bpointer
-					# pointer=node.fpointer      #its a node id 
-					# currentNode=tree.children(node.identifier)
 					currentNode=tree.get_node(node.identifier)
-					# currentNode=tree.get_node(node.fpointer)
-					# print("node")
-					# print(node)
-					# print("currentNode")
-					# print(currentNode)
 			if len(tree.children(currentNode.identifier))>1:
 				continue
 			currentNode=(tree.children(currentNode.identifier))[0]
 			if (currentNode.tag=="Edible")|(currentNode.tag=="Poison"):
-				# print(currentNode.tag+"  "+item[len(item)-1])
 				if currentNode.tag==StrConverter(item[len(item)-1]):
 					countT+=1
 				break
-	print(countT/len(dataset))	   
+	success=countT/len(dataset)
+	return success
 
 def StrConverter(str):
 	if str=="e":
@@ -56,18 +36,30 @@ def StrConverter(str):
 	else :
 		return "Poison"
 
-def train(increment):
+def train(trainSize,increment):
 	# print(GetSubExamples(test,1))
-	incset=trainset[0:50]
-	attributes=[]
-	for i in range(22):
-		attributes.append(i)
-	# print(getImportant(incset,attributes))
-	trainedTree=Tree()
-	trainedTree=DecitionTreeLearning(incset,attributes,[])
-	trainedTree.show(line_type="ascii-em")
-	testTree(trainedTree)
-	# print(','.join([trainedTree[node].tag for node in trainedTree.expand_tree(mode=Tree.DEPTH)]))     #print the tree in line in DPS way
+	currentSize=increment
+	print("-----------")
+	print("Statistics")
+	print("-----------")
+	while currentSize<trainSize+increment:
+		incset=trainset[0:currentSize]
+		attributes=[]
+		for i in range(22):
+			attributes.append(i)
+		trainedTree=Tree()
+		trainedTree=DecitionTreeLearning(incset,attributes,[])
+		print("Training set size: "+str(currentSize)+".  Success:  "+str(testTree(trainedTree))+" percent")
+		if(currentSize==trainSize):
+			print("-----------")
+			print("Final Decision Tree")
+			print("-----------")
+			trainedTree.show(line_type="ascii-em")
+			return
+		if currentSize+increment>trainSize:
+			currentSize=trainSize
+		else:
+			currentSize+=increment
 
 
 def DecitionTreeLearning(examples,attributes,pexamples):
@@ -86,7 +78,6 @@ def DecitionTreeLearning(examples,attributes,pexamples):
 		node=getImportant(examples,attributes)
 		tree = Tree()
 		tree.create_node(str(getPropertyName(node)), str(node))       #make the identifier be str
-		# tree.show()
 		subExamples=getSubExamples(examples,node)
 		attributes.remove(node)
 		for key, value in subExamples.items():
@@ -202,20 +193,19 @@ def getEntropy(targetSet,attr):             #works correct
 
 def getData(trainSize,increment):
 	global dataset,trainset,properties
-	# trainSize=250
-	# increment=10
 	print("Training Set Size: "+str(trainSize))
 	print("Increment of Training Set: "+str(increment))
-	# with open(r'''C:\Users\Administrator\Desktop\hw01\hw01\input_files\mushroom_data.txt''', "r") as f:  # fow windows to get dataset
-	with open(r'''/Users/leijinhuan/Documents/Code/hw01/input_files/mushroom_data.txt''', "r") as f:       # fow Mac
+	module_path = os.path.dirname(__file__)    
+	dataFileName = module_path + "/mushroom_data.txt"
+	propertiesFileName=module_path + "/properties.txt"                    #relative path
+	# with open(r'''/Users/leijinhuan/Documents/Code/hw01/input_files/mushroom_data.txt''', "r") as f:       # fow Mac abosulute path
+	with open(dataFileName, "r") as f:
 		# data=f.readlines()
 		for line in f.readlines():
 			line=line.strip()
 			dataset.append(list(map(str,line.split(" "))))
-		# print(dataset[0]) 
-		# print(len(data))  #5644
-	# with open(r'''C:\Users\Administrator\Desktop\hw01\hw01\input_files\properties.txt''', "r") as l:      #properties
-	with open(r'''/Users/leijinhuan/Documents/Code/hw01/input_files/properties.txt''', "r") as l:
+	# with open(r'''/Users/leijinhuan/Documents/Code/hw01/input_files/properties.txt''', "r") as l:
+	with open(propertiesFileName, "r") as l:	
 		for line in l.readlines():
 			line=line.strip()
 			content=line.split(":")
@@ -226,9 +216,7 @@ def getData(trainSize,increment):
 		index = random.randint(0,len(dataset)-1)
 		trainset.append(dataset[index])
 		dataset.pop(index)
-	# print("trainset:"+str(len(trainset)))
-	# print(trainset[0:5])
-	train(increment)
+	train(trainSize,increment)
 
 def GetInputs():
 	trainSize=0
@@ -245,4 +233,4 @@ def GetInputs():
 	getData(trainSize,increment)
 
 if __name__=="__main__":
-	getData(250,10)
+	GetInputs()
