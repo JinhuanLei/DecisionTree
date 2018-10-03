@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import sys
 import random
 import math
 from treelib import Node, Tree
@@ -29,6 +30,7 @@ def testTree(tree):
 					countT+=1
 				break
 	success=countT/len(dataset)
+	print("Given current tree, there are "+str(countT)+" correct classifications out of "+str(len(dataset))+" possible (a success rate of "+str(success)+" percent).")
 	return success
 
 def StrConverter(str):
@@ -42,10 +44,8 @@ def train(trainSize,increment):
 	currentSize=increment
 	p1=[]   #x-axis  Training Set
 	p2=[]   #y-axis  Correct
-	
-	print("-----------")
-	print("Statistics")
-	print("-----------")
+	outSize=[]
+	outPercent=[]
 	while currentSize<trainSize+increment:
 		incset=trainset[0:currentSize]
 		attributes=[]
@@ -53,16 +53,25 @@ def train(trainSize,increment):
 			attributes.append(i)
 		trainedTree=Tree()
 		trainedTree=DecitionTreeLearning(incset,attributes,[])
+		print("Running with "+str(currentSize)+" examples in training set.")
 		successPercent=testTree(trainedTree)
-		print("Training set size: "+str(currentSize)+".  Success:  "+str(successPercent)+" percent")
+		outSize.append(currentSize)
+		outPercent.append(successPercent)
+		# print("Training set size: "+str(currentSize)+".  Success:  "+str(successPercent)+" percent")
 		p1.append(currentSize)
 		p2.append(successPercent)
 		if(currentSize==trainSize):
-			# Draw(p1,p2)         #Call draw function to draw picture
+			Draw(p1,p2)         #Call draw function to draw picture2
 			print("-----------")
-			print("Final Decision Tree")
+			print("Statistics")
 			print("-----------")
-			trainedTree.show(line_type="ascii-em")
+			for (i,j) in zip(outSize,outPercent):
+				print("Training set size: "+str(i)+".  Success:  "+str(j)+" percent")	
+			if len(sys.argv)>1:
+				print("-----------")
+				print("Final Decision Tree")
+				print("-----------")
+				trainedTree.show(line_type="ascii-em")
 			return
 		if currentSize+increment>trainSize:
 			currentSize=trainSize
@@ -72,9 +81,11 @@ def train(trainSize,increment):
 def Draw(p1,p2):
 	module_path = os.path.dirname(__file__)
 	plt.figure('Draw')
+	plt.xlabel('Size of Training Set')
+	plt.ylabel('Correct')
 	plt.plot(p1,p2)  
 	plt.draw()  
-	plt.pause(1)  
+	plt.pause(2)  
 	plt.savefig(module_path+"/Output01.png")
 	plt.close()   
 
@@ -220,6 +231,7 @@ def getData(trainSize,increment):
 		for line in f.readlines():
 			line=line.strip()
 			dataset.append(list(map(str,line.split(" "))))
+	print("Loading Data from database.")
 	# with open(r'''/Users/leijinhuan/Documents/Code/hw01/input_files/properties.txt''', "r") as l:
 	with open(propertiesFileName, "r") as l:	
 		for line in l.readlines():
@@ -227,7 +239,7 @@ def getData(trainSize,increment):
 			content=line.split(":")
 			content[1]=content[1].strip()
 			properties[content[0]]=list(map(str,content[1].split(" ")))
-	# print(properties)
+	print("Loading Property Information from file.")
 	for i in range(trainSize):
 		index = random.randint(0,len(dataset)-1)
 		trainset.append(dataset[index])
@@ -238,7 +250,7 @@ def GetInputs():
 	trainSize=0
 	increment=0
 	trainSize=int(input("Please Enter Training Set Size(250 ≤ S ≤ 1000):"))
-	if (trainSize>1000)|(trainSize<250):
+	if (trainSize>1000)|(trainSize<250)|(trainSize%250!=0):
 		print("Please Enter the Effective Value!")
 		GetInputs()
 	while(True):
@@ -250,3 +262,4 @@ def GetInputs():
 
 if __name__=="__main__":
 	GetInputs()
+	
